@@ -60,6 +60,7 @@ export default function AddVendorPage() {
           placeholder="Vendor Name" 
           className="border p-2 rounded text-black cursor-not-allowed"
           value={selectedVendor?.name || ''}
+          readOnly
           required 
         />
         <input 
@@ -67,6 +68,7 @@ export default function AddVendorPage() {
           placeholder="Vendor logo" 
           className="border p-2 rounded text-black/40 cursor-not-allowed"
           value={selectedVendor?.logo || ''}
+          readOnly
           required 
         />
         <select name="type" className="border p-2 rounded text-black">

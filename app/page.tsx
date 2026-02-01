@@ -1,4 +1,4 @@
-// import Image from "next/image";
+
 import Link from "next/link";
 
 export default function Home() {
@@ -15,7 +15,7 @@ export default function Home() {
         </Link>
 
         {/* Admin 按钮 - 跳转到供应商管理页面 */}
-        <Link href="/vendors/new">
+        <Link href="/vendors">
           <button className="px-8 py-4 bg-blue-600 text-white rounded-lg text-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg">
             Admin
           </button>

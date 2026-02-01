@@ -1,17 +1,36 @@
 'use server';
 
 import {docClient} from "@/lib/db"
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export type ActionState  = {
   success: boolean;
   message: string;
 };
 
+export async function getAllVendors() {
+    try {
+        const command = new ScanCommand({
+            TableName: 'Vendors',
+            FilterExpression: 'SK = :sk',
+            ExpressionAttributeValues: {
+                ":sk": "METADATA",
+            }
+        })
+        const response = await docClient.send(command);
+        return response.Items || [];
+
+    }catch (e) {
+        console.log('Scan vendor error: ', e)
+        return []
+    }
+}
+
 export async function createVendorAction(prev: ActionState, formData: FormData): Promise<ActionState> {
   // 1. get data from Form
   const vendorId = formData.get("vendorId") as string;
   const name = formData.get("name") as string;
+  const logo = formData.get('logo') as string;
   const type = formData.get("type") as string;
 
   try {
@@ -22,6 +41,7 @@ export async function createVendorAction(prev: ActionState, formData: FormData):
         PK: `VENDOR#${vendorId.toUpperCase()}`,
         SK: "METADATA",
         name: name,
+        logo: logo,
         type: type,
         status: "ACTIVE",
         createdAt: new Date().toISOString(),
