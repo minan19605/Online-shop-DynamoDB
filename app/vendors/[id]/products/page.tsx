@@ -10,7 +10,7 @@ import {
   MainCategory 
 } from "@/lib/constants";
 
-import { ProductRow, saveProducts, getVendorProducts } from '@/app/actions/product-actions'
+import { SavedProductRow, FetchedProduct, saveProducts, getVendorProducts } from '@/app/actions/product-actions'
 
 export default function AddProductPage() {
   const params = useParams();
@@ -21,7 +21,7 @@ export default function AddProductPage() {
   const vendor = VENDOR_OPTIONS.find(v => v.id === params.id) || VENDOR_OPTIONS[0];
 
   // 2. 状态管理：产品行数组
-  const [products, setProducts] = useState<ProductRow[]>([
+  const [products, setProducts] = useState<SavedProductRow[]>([
     { category: "", subCategory: "", imageUrl: "", unit: "", price: "", count:0 }
   ]);
 
@@ -38,7 +38,7 @@ export default function AddProductPage() {
   };
 
   // 处理输入变化
-  const updateRow = (index: number, field: keyof ProductRow, value: any) => {
+  const updateRow = (index: number, field: keyof SavedProductRow, value: any) => {
     const updated = [...products];
     const row = { ...updated[index], [field]: value };
 
@@ -81,7 +81,18 @@ export default function AddProductPage() {
     // setLoading(true);
     const result = await getVendorProducts(vendor.id);
 
-    if (result.success) setProducts(result.data);
+    if (result.success) {
+        // console.log('Fetched: ', result.data)
+        const data: SavedProductRow[] = (result.data as FetchedProduct[]).map(item => ({
+            category: item.category as MainCategory,
+            subCategory: item.name,      // 映射字段
+            imageUrl: item.imageUrl,
+            unit: item.unit,
+            price: item.price,
+            count: Number(item.count) || 0 // 类型修正
+        }));
+        setProducts(data);
+    }
     // setLoading(false);
   };
 

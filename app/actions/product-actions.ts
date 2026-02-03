@@ -1,16 +1,16 @@
 'use server';
 
 import {docClient} from "@/lib/db"
-import { BatchWriteCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { BatchWriteCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 import { 
-  VENDOR_OPTIONS, 
-  PRODUCT_CATEGORIES, 
-  PRODUCT_IMAGES, 
+//   VENDOR_OPTIONS, 
+//   PRODUCT_CATEGORIES, 
+//   PRODUCT_IMAGES, 
   MainCategory 
 } from "@/lib/constants";
 
-export interface ProductRow {
+export interface SavedProductRow {
   category: MainCategory | ""; // 'CHICKEN', 'BEEF'
   subCategory: string;  // "wings" , "drum sticks"
   imageUrl: string;
@@ -19,6 +19,17 @@ export interface ProductRow {
   count: number;
 }
 
+export interface FetchedProduct {
+    PK: string;
+    SK: string;
+    category: string; // 'CHICKEN', 'BEEF'
+    count: string;
+    createAt: string;
+    imageUrl: string;
+    name: string;  // "wings" , "drum sticks"
+    price: number | string;
+    unit: string;
+}
 
 export type ActionState  = {
   success: boolean;
@@ -37,8 +48,8 @@ export async function getVendorProducts(vendorId: string) {
         });
 
         const response = await docClient.send(command);
-        const items = response.Items || [];
-        console.log("Query products: ", items)
+        const items = (response.Items as FetchedProduct[]) || [];
+        // console.log("Query products: ", items)
 
         return {success: true, data: items};
     }catch(error) {
@@ -47,7 +58,7 @@ export async function getVendorProducts(vendorId: string) {
     }
 }
 
-export async function saveProducts(vendorId: string, products: ProductRow[]): Promise<ActionState> {
+export async function saveProducts(vendorId: string, products: SavedProductRow[]): Promise<ActionState> {
     try {
         const putRequests = products.map(prod => ({
             PutRequest: {
@@ -76,5 +87,22 @@ export async function saveProducts(vendorId: string, products: ProductRow[]): Pr
         console.error("DynamoDB Error:", error);
         return { success: false, message: "Write to DB failure" };
     }
-  
+}
+
+export async function getAllProductsForCustomer() {
+  try {
+    const command = new ScanCommand({
+      TableName: "Vendors",
+      // 过滤只取出产品数据（SK 以 PROD# 开头）
+      FilterExpression: "begins_with(SK, :prefix)",
+      ExpressionAttributeValues: {
+        ":prefix": "PROD#",
+      },
+    });
+
+    const response = await docClient.send(command);
+    return { success: true, data: response.Items as FetchedProduct[] || [] };
+  } catch (error) {
+    return { success: false, error: "Failed to load products" };
+  }
 }
