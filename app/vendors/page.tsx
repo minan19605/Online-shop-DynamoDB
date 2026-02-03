@@ -18,7 +18,7 @@ export default async function VendorsListPage() {
           return (
             <Link 
               key={vendor.PK} 
-              href={`/vendors/${vendorId}`} // 点击跳转到详情页
+              href={`/vendors/${vendorId}/products`} // 点击跳转到详情页
               className="group"
             >
               <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-2">

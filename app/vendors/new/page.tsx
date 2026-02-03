@@ -1,15 +1,11 @@
 'use client'
 
 import { useActionState, useState, useEffect } from "react";
+import Link from "next/link";
 import { createVendorAction, ActionState } from "@/app/actions/vendor-actions";
 import { ResultModal } from "@/components/ResultModal";
 
-const VENDOR_OPTIONS = [
-  { id: "COSTCO", name: "Costco Wholesale", logo: '/vendors/Costco-Logo.png'},
-  { id: "ALDI", name: "ALDI U.S.", logo: '/vendors/Aldi-Logo.png' },
-  { id: "TARGET", name: "Target" , logo: '/vendors/Target-Logo.png'},
-  { id: "WALMART", name: "Walmart", logo: '/vendors/Walmart-Logo.png' },
-];
+import { VENDOR_OPTIONS } from "@/lib/constants";
 
 const initialState: ActionState = {
     success: false,
@@ -92,6 +88,10 @@ export default function AddVendorPage() {
         message={state.message}
         onClose={() => setModalOpen(false)}
       />
+
+      <Link href='/vendors'>
+      <button className="mt-8 px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-bold rounded-2xl">Back</button>
+      </Link>
       
     </div>
   );
