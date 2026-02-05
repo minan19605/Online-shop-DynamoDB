@@ -1,7 +1,7 @@
 'use server';
 
 import {docClient} from "@/lib/db"
-import { BatchWriteCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { BatchWriteCommand, QueryCommand, ScanCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 
 import { 
 //   VENDOR_OPTIONS, 
@@ -9,6 +9,7 @@ import {
 //   PRODUCT_IMAGES, 
   MainCategory 
 } from "@/lib/constants";
+
 
 export interface SavedProductRow {
   category: MainCategory | ""; // 'CHICKEN', 'BEEF'
@@ -23,7 +24,7 @@ export interface FetchedProduct {
     PK: string;
     SK: string;
     category: string; // 'CHICKEN', 'BEEF'
-    count: string;
+    count: number;
     createAt: string;
     imageUrl: string;
     name: string;  // "wings" , "drum sticks"

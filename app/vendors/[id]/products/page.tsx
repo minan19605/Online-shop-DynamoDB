@@ -18,7 +18,9 @@ export default function AddProductPage() {
   const [isSaving, setIsSaving] = useState(false)
   
   // 1. 获取当前 Vendor 信息
-  const vendor = VENDOR_OPTIONS.find(v => v.id === params.id) || VENDOR_OPTIONS[0];
+  // 强制取第一项或字符串，确保比较的是两个字符串
+    const currentId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const vendor = VENDOR_OPTIONS.find(v => v.id === currentId) || VENDOR_OPTIONS[0];
 
   // 2. 状态管理：产品行数组
   const [products, setProducts] = useState<SavedProductRow[]>([
@@ -81,8 +83,8 @@ export default function AddProductPage() {
     // setLoading(true);
     const result = await getVendorProducts(vendor.id);
 
-    if (result.success) {
-        // console.log('Fetched: ', result.data)
+    if (result.success && result.data?.length) {
+        console.log('Fetched: ', result.data)
         const data: SavedProductRow[] = (result.data as FetchedProduct[]).map(item => ({
             category: item.category as MainCategory,
             subCategory: item.name,      // 映射字段
@@ -194,7 +196,7 @@ export default function AddProductPage() {
                       placeholder="0.00"
                       className="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                       value={row.price}
-                      onChange={(e) => updateRow(index, "price", e.target.value)}
+                      onChange={(e) => updateRow(index, "price", Number(e.target.value))}
                     />
                   </td>
 
@@ -207,7 +209,7 @@ export default function AddProductPage() {
                       placeholder="0"
                       className="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                       value={row.count}
-                      onChange={(e) => updateRow(index, "count", e.target.value)}
+                      onChange={(e) => updateRow(index, "count", Number(e.target.value))}
                     />
                   </td>
 

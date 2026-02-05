@@ -6,6 +6,8 @@ export const VENDOR_OPTIONS = [
   { id: "WALMART", name: "Walmart", logo: '/vendors/Walmart-Logo.png' },
 ] as const;
 
+export type Vendor = (typeof VENDOR_OPTIONS)[number];
+
 export const PRODUCT_CATEGORIES = {
     CHICKEN: ['WINGS', 'DRUMSTICKS', 'BREASTS', 'WHOLE CHICKEN'],
     BEEF:    ['PATTIES', 'SHORT RIBS','RIBEYE STEAKS', 'SIRLOINS STEAKS'],
