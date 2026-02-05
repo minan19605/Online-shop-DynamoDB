@@ -1,7 +1,7 @@
 'use server';
 
 import {docClient} from "@/lib/db"
-import { BatchWriteCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 export interface customerSchema {
     PK: string; // 'USER#EMAIL'
@@ -42,6 +42,36 @@ export async function fetchCustomer() {
     }
 }
 
+// 定义用户信息
+// export interface CustomerProfile {
+//   PK: string;
+//   SK: "PROFILE";
+//   username: string;
+//   address: string;
+//   phone: string;
+//   email: string;
+//   createdAt?: string;
+// }
+
+// 定义订单中的单项商品
+export interface OrderItem {
+  name: string;
+  price: number;
+  qty: number;
+  unit: string;
+  imageUrl: string;
+  vendorName?: string;
+}
+
+// 定义订单记录
+export interface CustomerOrder {
+  PK: string;
+  SK: string; // 格式如 ORD#1738720000
+  items: OrderItem[];
+  totalAmount?: number;
+  createdAt: string;
+}
+
 export async function getCustomerDashboard(customerId: string) {
     console.log('Customer PK: ', customerId)
   const command = new QueryCommand({
@@ -58,7 +88,7 @@ export async function getCustomerDashboard(customerId: string) {
   const items = response.Items || [];
 
   return {
-    profile: items.find(i => i.SK === 'PROFILE'),
-    orders: items.filter(i => i.SK.startsWith('ORD#')).slice(0, 20)
+    profile: items.find(i => i.SK === 'PROFILE') as customerSchema | null,
+    orders: items.filter(i => i.SK.startsWith('ORD#')).slice(0, 20) as CustomerOrder[]
   };
 }

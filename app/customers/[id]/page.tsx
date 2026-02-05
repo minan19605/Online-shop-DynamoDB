@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 
 
 // app/customer/page.tsx
-import { getCustomerDashboard } from "@/app/actions/customer-action";
+import { CustomerOrder, customerSchema, getCustomerDashboard } from "@/app/actions/customer-action";
 import React from "react";
 import Link from "next/link";
 
@@ -16,8 +16,8 @@ export default function CustomerPage() {
     const params = useParams();
     const customerId = Array.isArray(params.id) ? params.id[0] : params.id;
     
-    const [profile, setProfile] = useState()
-    const [orders, setOrders] = useState()
+    const [profile, setProfile] = useState<customerSchema | null>(null)
+    const [orders, setOrders] = useState<CustomerOrder[]>([])
     const [loading, setLoading] = useState(true)
 
     const fetchCustomerAllData = async (PK:string) => {

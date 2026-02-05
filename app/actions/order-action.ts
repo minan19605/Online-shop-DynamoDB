@@ -26,7 +26,7 @@ export async function processOrders(customer:CustomerProfile, cartList: CartItem
         ConditionExpression: " #c >= :qty",
         ExpressionAttributeNames: {'#c': 'count'},
         ExpressionAttributeValues: {':qty': item.orderCount},
-        ReturnValuesOnConditionCheckFailure: "ALL_OLD"
+        ReturnValuesOnConditionCheckFailure: "ALL_OLD" as const
         }}
     })
 
