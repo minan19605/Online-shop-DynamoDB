@@ -40,7 +40,7 @@ export default function AddProductPage() {
   };
 
   // 处理输入变化
-  const updateRow = (index: number, field: keyof SavedProductRow, value: any) => {
+  const updateRow = <K extends keyof SavedProductRow>(index: number, field: K, value: SavedProductRow[K]) => {
     const updated = [...products];
     const row = { ...updated[index], [field]: value };
 
@@ -51,7 +51,7 @@ export default function AddProductPage() {
     }
 
     // 逻辑联动：如果改变了 SubCategory，自动关联图片
-    if (field === "subCategory") {
+    if (field === "subCategory" && typeof value === "string") {
       row.imageUrl = PRODUCT_IMAGES[value] || "";
     }
 
@@ -73,7 +73,8 @@ export default function AddProductPage() {
         }
 
     }catch(e) {
-        alert('An error occurred: '+ e.message)
+        const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
+        alert('An error occurred: ' + errorMessage);
     }finally {
         setIsSaving(false)
     }
@@ -139,7 +140,7 @@ export default function AddProductPage() {
                     <select
                       className="w-full border rounded-lg p-2 bg-white outline-none focus:ring-2 focus:ring-blue-500"
                       value={row.category}
-                      onChange={(e) => updateRow(index, "category", e.target.value)}
+                      onChange={(e) => updateRow(index, "category", e.target.value as "CHICKEN" | "BEEF" | "")}
                     >
                       <option value="">Select</option>
                       {Object.keys(PRODUCT_CATEGORIES).map(cat => (

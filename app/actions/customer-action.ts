@@ -59,7 +59,7 @@ export interface OrderItem {
   price: number;
   qty: number;
   unit: string;
-  imageUrl: string;
+  productImgUrl: string;
   vendorName?: string;
 }
 

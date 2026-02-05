@@ -96,10 +96,10 @@ export default function CustomerPage() {
               {orders.length === 0 ? (
                 <tr><td colSpan={6} className="py-10 text-center text-gray-400">No orders yet.</td></tr>
               ) : (
-                orders.map((order: any) => (
+                orders.map((order: CustomerOrder) => (
                   // 注意：如果一条订单里有多个商品，这里需要进一步处理
                   // 假设你的 items 存放在 order.items 数组里
-                  order.items.map((item: any, idx: number) => (
+                  order.items?.map((item, idx: number) => (
                     <tr key={`${order.SK}-${idx}`} className="hover:bg-gray-50 transition-colors">
                       <td className="py-4 px-4 flex items-center space-x-3">
                         <img 
