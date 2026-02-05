@@ -69,7 +69,7 @@ export interface CustomerOrder {
   SK: string; // 格式如 ORD#1738720000
   items: OrderItem[];
   totalAmount?: number;
-  createdAt: string;
+  orderDate: string;
 }
 
 export async function getCustomerDashboard(customerId: string) {
