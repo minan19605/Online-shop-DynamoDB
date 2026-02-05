@@ -1,10 +1,11 @@
 'use server';
 
 import {docClient} from "@/lib/db"
-import { TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { TransactWriteCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 
 import { CartItem, CustomerProfile } from "../shop/page";
-import { CancellationReason } from "@aws-sdk/client-dynamodb";
+import { CancellationReason, TransactWriteItem} from "@aws-sdk/client-dynamodb";
+import { CustomerOrder } from "./customer-action";
 
 // 1. 定义一个兼容 AWS 错误结构的接口
 interface TransactionCanceledError extends Error {
@@ -18,26 +19,63 @@ interface TransactionCanceledError extends Error {
 export async function processOrders(customer:CustomerProfile, cartList: CartItem[], totalAmount: number) {
 
     const orderId = `ORD#${Date.now()}`
-    const timestamp = new Date().toISOString()
+    const orderCreatedTime = new Date().toISOString()
     console.log('Customer: ', customer)
+
+    const queryCommand = new QueryCommand({
+        TableName: 'Customers',
+        KeyConditionExpression: "PK = :pk",
+        FilterExpression: "#t = :type", // 过滤 type='ORDER'
+        ExpressionAttributeNames: { "#t": "type" },
+        ExpressionAttributeValues: {
+            ":pk": customer.PK,
+            ":type": "ORDER"
+        },
+        ScanIndexForward: true, // 最老的订单排在数组第 0 位
+    });
+
+    const { Items } = await docClient.send(queryCommand);
+    const currentOrders = (Items as unknown as CustomerOrder[]) || [];
+
+    // 准备事务容器
+    const transactItems = [];
+
+    if(currentOrders.length >= 100)  // 最多保留100条订购记录
+    {
+        currentOrders.sort((a, b) => a.orderDate.localeCompare(b.orderDate))
+        const oldestItem = currentOrders[0]
+        transactItems.push({
+            Delete: {
+                TableName: 'Customers',
+                Key: {
+                    PK: oldestItem.PK as string,
+                    SK: oldestItem.SK as string
+                }
+            }
+        });
+    }
 
     // Step1: update the products records
     const updateProducts = cartList.map(item =>
     {
         console.log('In update values are: ', item.orderCount, item.product.count)
-        return {Update: {
-        TableName: 'Vendors',
-        Key: {
-            PK: item.product.PK,
-            SK: item.product.SK,
-        },
-        UpdateExpression: "SET #c = #c - :qty",
-        ConditionExpression: " #c >= :qty",
-        ExpressionAttributeNames: {'#c': 'count'},
-        ExpressionAttributeValues: {':qty': item.orderCount},
-        ReturnValuesOnConditionCheckFailure: "ALL_OLD" as const
-        }}
+        return {
+            Update: {
+                TableName: 'Vendors',
+                Key: {
+                    PK: item.product.PK,
+                    SK: item.product.SK,
+                },
+                UpdateExpression: "SET #c = #c - :qty",
+                ConditionExpression: " #c >= :qty",
+                ExpressionAttributeNames: {'#c': 'count'},
+                ExpressionAttributeValues: {':qty': item.orderCount},
+                ReturnValuesOnConditionCheckFailure: "ALL_OLD" as const
+                }
+            }
     })
+
+    transactItems.push(...updateProducts);
 
     // step2: Add customer's order records
     const customerOrders = {
@@ -47,7 +85,7 @@ export async function processOrders(customer:CustomerProfile, cartList: CartItem
                 PK: customer.PK,
                 SK: orderId,
                 type: 'ORDER',
-                orderDate: timestamp,
+                orderDate: orderCreatedTime,
                 items: cartList.map(item => ({
                     name: item.product.name,
                     vendorName: item.vendor.name,
@@ -61,15 +99,12 @@ export async function processOrders(customer:CustomerProfile, cartList: CartItem
             }
         }
     }
+
+    transactItems.push(customerOrders);
     
     // step3: Use atomic transaction to update Vendor and customer Table.
     try {
-        const command = new TransactWriteCommand( {
-            TransactItems: [
-                ...updateProducts,
-                customerOrders
-            ]
-        })
+        const command = new TransactWriteCommand( { TransactItems: transactItems })
         await docClient.send(command)
         return {success: true, orderId: orderId}
 
@@ -110,5 +145,4 @@ export async function processOrders(customer:CustomerProfile, cartList: CartItem
         }
     }
     }
-
 }

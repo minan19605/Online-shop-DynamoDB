@@ -43,11 +43,11 @@ export default function CartPage() {
         alert("Order successful!")
         router.push('/shop')
 
-    } catch (error: any) {
-        
-      console.error("Checkout error:", error);
-      alert( error.message || "Failed to process order.");
+    } catch (e) {
 
+      const errorMessage = e instanceof Error ? e.message : "An unknown error occurred";
+      alert('An error occurred: ' + errorMessage);
+      
     } finally {
       setIsProcessing(false);
     }
